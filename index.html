@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnnaRoblox's Bypass Creator</title>
+    <b>AnnaRoblox's bypass creator</b>
+    <p>webpage edition</p>
+   <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .controls {
+            background: #1e1e1e;
+            padding: 24px;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        
+        canvas {
+            max-width: 100%;
+            height: auto;
+            image-rendering: pixelated;
+            background-image: 
+                linear-gradient(45deg, #222 25%, transparent 25%), 
+                linear-gradient(-45deg, #222 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #222 75%), 
+                linear-gradient(-45deg, transparent 75%, #222 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+
+        label { font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+        input[type="range"], select, input[type="color"] { 
+            width: 100%; 
+            cursor: pointer; 
+            background: #2a2a2a; 
+            border: 1px solid #444; 
+            color: white; 
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .info { margin-top: 10px; font-size: 0.85rem; color: #666; }
+        .button-row {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-download { background: #4f46e5; color: white; }
+        .btn-download:hover { background: #6366f1; }
+        .btn-copy { background: #10b981; color: white; }
+        .btn-copy:hover { background: #34d399; }
+        .btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none !important; }
+        
+        #status-msg {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            height: 1.2em;
+        }
+
+        .manual-data-area {
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 20px;
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        #base64Output {
+            width: 100%;
+            height: 80px;
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            border: 1px solid #444;
+            padding: 8px;
+            margin-top: 8px;
+            resize: none;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Processing Mode</label>
+            <select id="mode">
+                <option value="0">Invisible on Grey</option>
+                <option value="1">Colored Grey Hybrid</option>
+                <option value="2">Low Color</option>
+                <option value="3">Double Layer (On Black)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Clear Color</label>
+            <input type="color" id="clearColor" value="#000000">
+        </div>
+
+        <div class="control-group">
+            <label>Global Opacity (<span id="opVal">255</span>)</label>
+            <input type="range" id="opacity" min="0" max="255" value="255">
+        </div>
+
+        <div class="control-group">
+            <label>Tolerance (<span id="tolVal">124</span>)</label>
+            <input type="range" id="tolerance" min="0" max="255" value="124">
+        </div>
+
+        <div class="control-group">
+            <label>Extraction Options</label>
+            <div style="display: flex; gap: 15px; padding-top: 5px;">
+                <span><input type="checkbox" id="clearFirst" checked> <label for="clearFirst" style="display: inline; color: #e0e0e0; text-transform: none;">Clear First</label></span>
+                <span><input type="checkbox" id="clearGreyOnly"> <label for="clearGreyOnly" style="display: inline; color: #e0e0e0; text-transform: none;">Grey Only</label></span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>Image Input</label>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <div class="button-row">
+            <button id="downloadBtn" class="btn btn-download" disabled>Download</button>
+        </div>
+    </div>
+
+    <div id="status-msg"></div>
+    <p class="info">Paste (Ctrl+V) an image. Use Download or base64 for 100% pixel-perfect results. (otherwise itll likely get banned)</p>
+    
+    <canvas id="mainCanvas"></canvas>
+
+    <div class="manual-data-area">
+        <label>Manual Lossless Base64 you must use this if you dont download it otherwise it will get banned</label>
+        <textarea id="base64Output" readonly placeholder="Base64 data will appear here after processing..."></textarea>
+        <button id="copyBase64" class="btn" style="margin-top: 8px; background: #333; font-size: 0.8rem; padding: 6px;">Copy Text Data</button>
+    </div>
+
+<script>
+    /**
+     * MANUAL LOSSLESS PNG ENCODER
+     * This is the only way to keep RGB data for transparent areas.
+     */
+    const PNGEncoder = (() => {
+        const crcTable = new Int32Array(256);
+        for (let n = 0; n < 256; n++) {
+            let c = n;
+            for (let k = 0; k < 8; k++) {
+                c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+            }
+            crcTable[n] = c;
+        }
+        function crc32(buf) {
+            let crc = -1;
+            for (let i = 0; i < buf.length; i++) crc = crcTable[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+            return crc ^ -1;
+        }
+        function writeUint32(uint32) {
+            return [ (uint32 >>> 24) & 0xFF, (uint32 >>> 16) & 0xFF, (uint32 >>> 8) & 0xFF, uint32 & 0xFF ];
+        }
+        function createChunk(type, data) {
+            const len = data.length;
+            const res = new Uint8Array(4 + 4 + len + 4);
+            res.set(writeUint32(len), 0);
+            res.set([type.charCodeAt(0), type.charCodeAt(1), type.charCodeAt(2), type.charCodeAt(3)], 4);
+            res.set(data, 8);
+            const checksum = crc32(res.subarray(4, 8 + len));
+            res.set(writeUint32(checksum), 8 + len);
+            return res;
+        }
+        return {
+            encode: (width, height, rgbaData) => {
+                const sig = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+                const ihdr = createChunk('IHDR', new Uint8Array([...writeUint32(width), ...writeUint32(height), 8, 6, 0, 0, 0]));
+                const scanlineWidth = width * 4 + 1;
+                const rawData = new Uint8Array(scanlineWidth * height);
+                for (let y = 0; y < height; y++) {
+                    rawData[y * scanlineWidth] = 0; 
+                    rawData.set(rgbaData.subarray(y * width * 4, (y + 1) * width * 4), y * scanlineWidth + 1);
+                }
+                let a = 1, b = 0;
+                for (let i = 0; i < rawData.length; i++) {
+                    a = (a + rawData[i]) % 65521; b = (b + a) % 65521;
+                }
+                const adler = [ (b >>> 8) & 0xFF, b & 0xFF, (a >>> 8) & 0xFF, a & 0xFF ];
+                const idatContent = new Uint8Array(2 + 5 * Math.ceil(rawData.length / 65535) + rawData.length + 4);
+                idatContent.set([0x78, 0x01], 0);
+                let pos = 2, srcPos = 0;
+                while (srcPos < rawData.length) {
+                    const chunkLen = Math.min(rawData.length - srcPos, 65535);
+                    const last = (srcPos + chunkLen >= rawData.length) ? 1 : 0;
+                    idatContent.set([last, chunkLen & 0xFF, (chunkLen >>> 8) & 0xFF, (~chunkLen) & 0xFF, ((~chunkLen) >>> 8) & 0xFF], pos);
+                    pos += 5;
+                    idatContent.set(rawData.subarray(srcPos, srcPos + chunkLen), pos);
+                    pos += chunkLen;
+                    srcPos += chunkLen;
+                }
+                idatContent.set(adler, pos);
+                const idat = createChunk('IDAT', idatContent);
+                const iend = createChunk('IEND', new Uint8Array(0));
+                const res = new Uint8Array(sig.length + ihdr.length + idat.length + iend.length);
+                let off = 0;
+                [sig, ihdr, idat, iend].forEach(c => { res.set(c, off); off += c.length; });
+                return res;
+            },
+            toBase64: (uint8) => {
+                let binary = '';
+                const len = uint8.byteLength;
+                for (let i = 0; i < len; i++) binary += String.fromCharCode(uint8[i]);
+                return window.btoa(binary);
+            }
+        };
+    })();
+
+    const mainCanvas = document.getElementById('mainCanvas');
+    const ctx = mainCanvas.getContext('2d', { willReadFrequently: true });
+    const statusMsg = document.getElementById('status-msg');
+    const base64Output = document.getElementById('base64Output');
+    let originalImage = null;
+    let lastProcessedData = null;
+
+    const ui = {};
+    ['mode', 'clearColor', 'opacity', 'tolerance', 'clearFirst', 'clearGreyOnly', 'fileInput'].forEach(id => {
+        ui[id] = document.getElementById(id);
+    });
+
+    const opValSpan = document.getElementById('opVal');
+    const tolValSpan = document.getElementById('tolVal');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const copyBase64Btn = document.getElementById('copyBase64');
+
+    const minAlpha = (Cc, Cb) => {
+        if (Cc === Cb) return 0;
+        return Cc > Cb 
+            ? Math.floor((255 * (Cc - Cb) - 1) / (255 - Cb) + 1)
+            : Math.floor(255 * (Cb - Cc - 1) / Cb + 1);
+    };
+
+    const adjustForAlpha = (Af, Cc, Cb, Cm) => {
+        if (Af === 0) return Cm;
+        let T = 255 * (Cc - Cb) - Af * (Cm - Cb);
+        let res = Cm;
+        if (T <= -255) res += Math.floor((T + 255) / Af) - 1;
+        else if (T > 0) res += Math.floor((T - 1) / Af) + 1;
+        return Math.max(0, Math.min(255, res));
+    };
+
+    const clearPixel = (r, g, b, a, targetR, targetG, targetB) => {
+        if (a === 0) return [0, 0, 0, 0];
+        let rc = r, gc = g, bc = b;
+        if (a !== 255) {
+            rc = Math.floor((255 * targetR + a * (r - targetR)) / 255);
+            gc = Math.floor((255 * targetG + a * (g - targetG)) / 255);
+            bc = Math.floor((255 * targetB + a * (b - targetB)) / 255);
+        }
+        let ac = Math.max(minAlpha(rc, targetR), Math.max(minAlpha(gc, targetG), minAlpha(bc, targetB)));
+        if (ac <= 0) return [0, 0, 0, 0];
+        return [
+            adjustForAlpha(ac, rc, targetR, r),
+            adjustForAlpha(ac, gc, targetG, g),
+            adjustForAlpha(ac, bc, targetB, b),
+            Math.max(0, Math.min(255, ac))
+        ];
+    };
+
+    const hexToRgb = (hex) => ({
+        r: parseInt(hex.slice(1, 3), 16),
+        g: parseInt(hex.slice(3, 5), 16),
+        b: parseInt(hex.slice(5, 7), 16)
+    });
+
+    function process() {
+        if (!originalImage) return;
+
+        const mode = parseInt(ui.mode.value);
+        const opacity = parseInt(ui.opacity.value);
+        const tolerance = parseInt(ui.tolerance.value);
+        const clearFirst = ui.clearFirst.checked;
+        const clearGreyOnly = ui.clearGreyOnly.checked;
+        const { r: Rb, g: Gb, b: Bb } = hexToRgb(ui.clearColor.value);
+
+        opValSpan.innerText = opacity;
+        tolValSpan.innerText = tolerance;
+
+        mainCanvas.width = originalImage.width;
+        mainCanvas.height = originalImage.height;
+        ctx.drawImage(originalImage, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, mainCanvas.width, mainCanvas.height);
+        const data = imgData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+            let r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+            const srcR = r, srcG = g, srcB = b, srcA = a;
+            let resR, resG, resB, resA;
+
+            if (mode === 3) {
+                const v = 112;
+                let [tr, tg, tb, ta] = clearPixel(r, g, b, a, 255, 255, 255);
+                tr = Math.max(0, Math.min(255, tr + v - Math.floor(2 * tr * v / 255)));
+                tg = Math.max(0, Math.min(255, tg + v - Math.floor(2 * tg * v / 255)));
+                tb = Math.max(0, Math.min(255, tb + v - Math.floor(2 * tb * v / 255)));
+                [tr, tg, tb, ta] = clearPixel(tr, tg, tb, ta, 255, 255, 255);
+                tr = (tr + 255) >> 1; tg = (tg + 255) >> 1; tb = (tb + 255) >> 1;
+                ta = Math.floor((ta * 138) / 255);
+                let [br, bg, bb, ba] = clearPixel(r, g, b, a, 0, 0, 0);
+                br = Math.max(0, Math.min(255, br + v - Math.floor(2 * br * v / 255)));
+                bg = Math.max(0, Math.min(255, bg + v - Math.floor(2 * bg * v / 255)));
+                bb = Math.max(0, Math.min(255, bb + v - Math.floor(2 * bb * v / 255)));
+                [br, bg, bb, ba] = clearPixel(br, bg, bb, ba, 0, 0, 0);
+                br = Math.floor(br * 127 / 255); bg = Math.floor(bg * 127 / 255); bb = Math.floor(bb * 127 / 255);
+                const alpha = ta / 255;
+                const invAlpha = 1 - alpha;
+                resR = tr * alpha + br * invAlpha; resG = tg * alpha + bg * invAlpha; resB = tb * alpha + bb * invAlpha;
+                resA = Math.max(ta, ba);
+            } else {
+                let wr = r, wg = g, wb = b, wa = a;
+                if (mode === 2) {
+                    [wr, wg, wb, wa] = clearPixel(wr, wg, wb, wa, Rb, Gb, Bb);
+                    wr = Math.max(0, Math.min(255, wr + 112 - Math.floor(2 * wr * 112 / 255)));
+                    wg = Math.max(0, Math.min(255, wg + 112 - Math.floor(2 * wg * 112 / 255)));
+                    wb = Math.max(0, Math.min(255, wb + 112 - Math.floor(2 * wb * 112 / 255)));
+                }
+                if (clearFirst && mode !== 2) {
+                    let sc = true;
+                    if (clearGreyOnly && (Math.max(wr, wg, wb) - Math.min(wr, wg, wb)) > tolerance) sc = false;
+                    if (sc) [wr, wg, wb, wa] = clearPixel(wr, wg, wb, wa, Rb, Gb, Bb);
+                }
+                resR = wr; resG = wg; resB = wb; resA = wa;
+                if (mode === 0) {
+                    resR = Math.max(0, Math.min(255, wr + 127 - Math.floor(2 * wr * 127 / 255)));
+                    resG = Math.max(0, Math.min(255, wg + 127 - Math.floor(2 * wg * 127 / 255)));
+                    resB = Math.max(0, Math.min(255, wb + 127 - Math.floor(2 * wb * 127 / 255)));
+                } else if (mode === 1 || mode === 2) {
+                    if ((Math.max(wr, wg, wb) - Math.min(wr, wg, wb)) <= tolerance) {
+                        resR = Math.max(0, Math.min(255, wr + 127 - Math.floor(2 * wr * 127 / 255)));
+                        resG = Math.max(0, Math.min(255, wg + 127 - Math.floor(2 * wg * 127 / 255)));
+                        resB = Math.max(0, Math.min(255, wb + 127 - Math.floor(2 * wb * 127 / 255)));
+                    } else if (mode === 1) {
+                        resR = Math.floor(wr * 127 / 255); resG = Math.floor(wg * 127 / 255); resB = Math.floor(wb * 127 / 255);
+                    }
+                }
+            }
+            const f = opacity / 255;
+            data[i] = Math.floor(srcR * (1 - f) + resR * f);
+            data[i+1] = Math.floor(srcG * (1 - f) + resG * f);
+            data[i+2] = Math.floor(srcB * (1 - f) + resB * f);
+            data[i+3] = Math.floor(srcA * (1 - f) + resA * f);
+        }
+        lastProcessedData = new Uint8Array(data);
+        ctx.putImageData(imgData, 0, 0);
+        downloadBtn.disabled = false; 
+        copyBtn.disabled = false;
+        
+        // Update Base64 for manual copy
+        const bytes = PNGEncoder.encode(originalImage.width, originalImage.height, lastProcessedData);
+        base64Output.value = "data:image/png;base64," + PNGEncoder.toBase64(bytes);
+    }
+
+    function showStatus(msg, color) {
+        statusMsg.innerText = msg; statusMsg.style.color = color;
+        setTimeout(() => { if(statusMsg.innerText === msg) statusMsg.innerText = ''; }, 3000);
+    }
+
+    function loadImage(url) {
+        const img = new Image();
+        img.onload = () => { originalImage = img; process(); };
+        img.src = url;
+    }
+
+    Object.keys(ui).forEach(id => {
+        if (!ui[id]) return;
+        ui[id].addEventListener(ui[id].type === 'file' ? 'change' : 'input', (e) => {
+            if (id === 'fileInput') {
+                const f = e.target.files[0]; if (f) loadImage(URL.createObjectURL(f));
+            } else process();
+        });
+    });
+
+    window.addEventListener('paste', (e) => {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (const item of items) if (item.type.indexOf("image") !== -1) loadImage(URL.createObjectURL(item.getAsFile()));
+    });
+
+    downloadBtn.addEventListener('click', () => {
+        const bytes = PNGEncoder.encode(originalImage.width, originalImage.height, lastProcessedData);
+        const link = document.createElement('a');
+        link.download = 'lossless-processed.png';
+        link.href = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+        link.click();
+        showStatus('Download Started!', '#10b981');
+    });
+
+    copyBtn.addEventListener('click', async () => {
+        try {
+            const bytes = PNGEncoder.encode(originalImage.width, originalImage.height, lastProcessedData);
+            const blob = new Blob([bytes], { type: 'image/png' });
+            if (navigator.clipboard && navigator.clipboard.write) {
+                await navigator.clipboard.write([ new ClipboardItem({ 'image/png': blob }) ]);
+                showStatus('Copied! (Note: Browser re-encoding likely if it gets banned use base64 section instead or download the image)', '#10b981');
+            }
+        } catch (e) {
+            showStatus('Clipboard Blocked.', '#ef4444');
+        }
+    });
+
+    copyBase64Btn.addEventListener('click', () => {
+        base64Output.select();
+        document.execCommand('copy');
+        showStatus('Base64 Text Copied!', '#10b981');
+    });
+</script>
+</body>
+</html>
