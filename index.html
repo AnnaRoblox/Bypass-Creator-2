@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnnaRoblox's Bypass Creator</title>
     <b>AnnaRoblox's bypass creator</b>
-    <p>webpage edition</p>
-   <style>
+    <p>Webpage Edition</p>
+    <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #121212;
@@ -30,16 +30,20 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             border: 1px solid #333;
         }
-        .control-group { display: flex; flex-direction: column; gap: 8px; }
-        
+        .control-group { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+       
         canvas {
             max-width: 100%;
             height: auto;
             image-rendering: pixelated;
-            background-image: 
-                linear-gradient(45deg, #222 25%, transparent 25%), 
-                linear-gradient(-45deg, #222 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #222 75%), 
+            background-image:
+                linear-gradient(45deg, #222 25%, transparent 25%),
+                linear-gradient(-45deg, #222 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #222 75%),
                 linear-gradient(-45deg, transparent 75%, #222 75%);
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
@@ -47,14 +51,19 @@
             border-radius: 8px;
             border: 1px solid #444;
         }
-
-        label { font-size: 0.75rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
-        input[type="range"], select, input[type="color"] { 
-            width: 100%; 
-            cursor: pointer; 
-            background: #2a2a2a; 
-            border: 1px solid #444; 
-            color: white; 
+        label { 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            color: #888; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+        }
+        input[type="range"], select, input[type="color"], input[type="number"] {
+            width: 100%;
+            cursor: pointer;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
             padding: 4px;
             border-radius: 4px;
         }
@@ -82,15 +91,14 @@
         .btn-download:hover { background: #6366f1; }
         .btn-copy { background: #10b981; color: white; }
         .btn-copy:hover { background: #34d399; }
-        .btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none !important; }
-        
+        .btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+       
         #status-msg {
             margin-top: 10px;
             font-size: 0.9rem;
             font-weight: bold;
             height: 1.2em;
         }
-
         .manual-data-area {
             width: 100%;
             max-width: 1000px;
@@ -116,7 +124,6 @@
     </style>
 </head>
 <body>
-
     <div class="controls">
         <div class="control-group">
             <label>Processing Mode</label>
@@ -127,20 +134,24 @@
                 <option value="3">Double Layer (On Black)</option>
             </select>
         </div>
-
         <div class="control-group">
             <label>Clear Color</label>
             <input type="color" id="clearColor" value="#000000">
         </div>
-
         <div class="control-group">
             <label>Global Opacity (<span id="opVal">255</span>)</label>
             <input type="range" id="opacity" min="0" max="255" value="255">
         </div>
-
         <div class="control-group">
             <label>Tolerance (<span id="tolVal">124</span>)</label>
             <input type="range" id="tolerance" min="0" max="255" value="124">
+        </div>
+
+        <!-- New Smart Resize Option -->
+        <div class="control-group">
+            <label>Smart Resize (px) — 0 = Original Size</label>
+            <input type="number" id="smartResize" min="0" max="4096" value="0" placeholder="e.g. 1024">
+            <small style="color:#666; font-size:0.75rem;">Resizes longer side while keeping aspect ratio</small>
         </div>
 
         <div class="control-group">
@@ -150,32 +161,29 @@
                 <span><input type="checkbox" id="clearGreyOnly"> <label for="clearGreyOnly" style="display: inline; color: #e0e0e0; text-transform: none;">Grey Only</label></span>
             </div>
         </div>
-        
+       
         <div class="control-group">
             <label>Image Input</label>
             <input type="file" id="fileInput" accept="image/*">
         </div>
-
         <div class="button-row">
             <button id="downloadBtn" class="btn btn-download" disabled>Download</button>
         </div>
     </div>
 
     <div id="status-msg"></div>
-    <p class="info">Paste (Ctrl+V) an image. Use Download or base64 for 100% pixel-perfect results. (otherwise itll likely get banned)</p>
-    
+    <p class="info">Paste (Ctrl+V) an image. Use Download or base64 for 100% pixel-perfect results.</p>
+   
     <canvas id="mainCanvas"></canvas>
 
     <div class="manual-data-area">
-        <label>Manual Lossless Base64 you must use this if you dont download it otherwise it will get banned</label>
+        <label>Manual Lossless Base64 (Recommended to avoid bans)</label>
         <textarea id="base64Output" readonly placeholder="Base64 data will appear here after processing..."></textarea>
         <button id="copyBase64" class="btn" style="margin-top: 8px; background: #333; font-size: 0.8rem; padding: 6px;">Copy Text Data</button>
     </div>
 
 <script>
-    /**
-     * MANUAL LOSSLESS PNG ENCODER
-     */
+    // ==================== PNG ENCODER (unchanged) ====================
     const PNGEncoder = (() => {
         const crcTable = new Int32Array(256);
         for (let n = 0; n < 256; n++) {
@@ -257,7 +265,7 @@
     let lastProcessedData = null;
 
     const ui = {};
-    ['mode', 'clearColor', 'opacity', 'tolerance', 'clearFirst', 'clearGreyOnly', 'fileInput'].forEach(id => {
+    ['mode', 'clearColor', 'opacity', 'tolerance', 'clearFirst', 'clearGreyOnly', 'fileInput', 'smartResize'].forEach(id => {
         ui[id] = document.getElementById(id);
     });
 
@@ -272,9 +280,142 @@
         b: parseInt(hex.slice(5, 7), 16)
     });
 
+    // ==================== IMAGE RESIZING FUNCTION ====================
+    function resizeImage(img, targetSize) {
+        if (targetSize <= 0) return img; // 0 = no resize
+
+        const aspect = img.width / img.height;
+        let newWidth, newHeight;
+
+        if (img.width > img.height) {
+            newWidth = targetSize;
+            newHeight = Math.round(targetSize / aspect);
+        } else {
+            newHeight = targetSize;
+            newWidth = Math.round(targetSize * aspect);
+        }
+
+        // Create temporary canvas for resizing
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = newWidth;
+        tempCanvas.height = newHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.imageSmoothingEnabled = true;
+        tempCtx.imageSmoothingQuality = 'high';
+        tempCtx.drawImage(img, 0, 0, newWidth, newHeight);
+
+        return tempCanvas;
+    }
+
+    // ==================== CORE PROCESSING ====================
+    function process() {
+        if (!originalImage) return;
+
+        const mode = parseInt(ui.mode.value);
+        const opacity = parseInt(ui.opacity.value);
+        const tolerance = parseInt(ui.tolerance.value);
+        const clearFirst = ui.clearFirst.checked;
+        const clearGreyOnly = ui.clearGreyOnly.checked;
+        const targetResize = parseInt(ui.smartResize.value) || 0;
+        const { r: Rb, g: Gb, b: Bb } = hexToRgb(ui.clearColor.value);
+
+        opValSpan.innerText = opacity;
+        tolValSpan.innerText = tolerance;
+
+        // === Smart Resize ===
+        let workingImage = originalImage;
+        if (targetResize > 0) {
+            workingImage = resizeImage(originalImage, targetResize);
+        }
+
+        mainCanvas.width = workingImage.width;
+        mainCanvas.height = workingImage.height;
+
+        ctx.drawImage(workingImage, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, mainCanvas.width, mainCanvas.height);
+        const data = imgData.data;
+
+        // (Rest of your original processing logic remains exactly the same)
+        for (let i = 0; i < data.length; i += 4) {
+            let r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+            const srcR = r, srcG = g, srcB = b, srcA = a;
+            let resR, resG, resB, resA;
+
+            if (mode === 3) {
+                const v = 112;
+                let [tr, tg, tb, ta] = clearPixel(r, g, b, a, 255, 255, 255);
+                tr = Math.max(0, Math.min(255, tr + v - Math.floor(2 * tr * v / 255)));
+                tg = Math.max(0, Math.min(255, tg + v - Math.floor(2 * tg * v / 255)));
+                tb = Math.max(0, Math.min(255, tb + v - Math.floor(2 * tb * v / 255)));
+                [tr, tg, tb, ta] = clearPixel(tr, tg, tb, ta, 255, 255, 255);
+                tr = (tr + 255) >> 1; tg = (tg + 255) >> 1; tb = (tb + 255) >> 1;
+                ta = Math.floor((ta * 138) / 255);
+
+                let [br, bg, bb, ba] = clearPixel(r, g, b, a, 0, 0, 0);
+                br = Math.max(0, Math.min(255, br + v - Math.floor(2 * br * v / 255)));
+                bg = Math.max(0, Math.min(255, bg + v - Math.floor(2 * bg * v / 255)));
+                bb = Math.max(0, Math.min(255, bb + v - Math.floor(2 * bb * v / 255)));
+                [br, bg, bb, ba] = clearPixel(br, bg, bb, ba, 0, 0, 0);
+                br = Math.floor(br * 127 / 255); bg = Math.floor(bg * 127 / 255); bb = Math.floor(bb * 127 / 255);
+
+                const alpha = ta / 255;
+                const invAlpha = 1 - alpha;
+                resR = tr * alpha + br * invAlpha;
+                resG = tg * alpha + bg * invAlpha;
+                resB = tb * alpha + bb * invAlpha;
+                resA = Math.max(ta, ba);
+            } else {
+                let wr = r, wg = g, wb = b, wa = a;
+                if (mode === 2) {
+                    [wr, wg, wb, wa] = clearPixel(wr, wg, wb, wa, Rb, Gb, Bb);
+                    wr = Math.max(0, Math.min(255, wr + 112 - Math.floor(2 * wr * 112 / 255)));
+                    wg = Math.max(0, Math.min(255, wg + 112 - Math.floor(2 * wg * 112 / 255)));
+                    wb = Math.max(0, Math.min(255, wb + 112 - Math.floor(2 * wb * 112 / 255)));
+                }
+                if (clearFirst && mode !== 2) {
+                    let sc = true;
+                    if (clearGreyOnly && (Math.max(wr, wg, wb) - Math.min(wr, wg, wb)) > tolerance) sc = false;
+                    if (sc) [wr, wg, wb, wa] = clearPixel(wr, wg, wb, wa, Rb, Gb, Bb);
+                }
+                resR = wr; resG = wg; resB = wb; resA = wa;
+
+                if (mode === 0) {
+                    resR = Math.max(0, Math.min(255, wr + 127 - Math.floor(2 * wr * 127 / 255)));
+                    resG = Math.max(0, Math.min(255, wg + 127 - Math.floor(2 * wg * 127 / 255)));
+                    resB = Math.max(0, Math.min(255, wb + 127 - Math.floor(2 * wb * 127 / 255)));
+                } else if (mode === 1 || mode === 2) {
+                    if ((Math.max(wr, wg, wb) - Math.min(wr, wg, wb)) <= tolerance) {
+                        resR = Math.max(0, Math.min(255, wr + 127 - Math.floor(2 * wr * 127 / 255)));
+                        resG = Math.max(0, Math.min(255, wg + 127 - Math.floor(2 * wg * 127 / 255)));
+                        resB = Math.max(0, Math.min(255, wb + 127 - Math.floor(2 * wb * 127 / 255)));
+                    } else if (mode === 1) {
+                        resR = Math.floor(wr * 127 / 255);
+                        resG = Math.floor(wg * 127 / 255);
+                        resB = Math.floor(wb * 127 / 255);
+                    }
+                }
+            }
+
+            const f = opacity / 255;
+            data[i]   = Math.floor(srcR * (1 - f) + resR * f);
+            data[i+1] = Math.floor(srcG * (1 - f) + resG * f);
+            data[i+2] = Math.floor(srcB * (1 - f) + resB * f);
+            data[i+3] = Math.floor(srcA * (1 - f) + resA * f);
+        }
+
+        lastProcessedData = new Uint8Array(data);
+        ctx.putImageData(imgData, 0, 0);
+        downloadBtn.disabled = false;
+
+        const bytes = PNGEncoder.encode(mainCanvas.width, mainCanvas.height, lastProcessedData);
+        base64Output.value = "data:image/png;base64," + PNGEncoder.toBase64(bytes);
+    }
+
+    // ==================== HELPER FUNCTIONS (clearPixel, adjustForAlpha, etc.) ====================
     const minAlpha = (Cc, Cb) => {
         if (Cc === Cb) return 0;
-        return Cc > Cb 
+        return Cc > Cb
             ? Math.floor((255 * (Cc - Cb) - 1) / (255 - Cb) + 1)
             : Math.floor(255 * (Cb - Cc - 1) / Cb + 1);
     };
@@ -306,121 +447,17 @@
         ];
     };
 
-    function process() {
-        if (!originalImage) return;
-
-        const mode = parseInt(ui.mode.value);
-        const opacity = parseInt(ui.opacity.value);
-        const tolerance = parseInt(ui.tolerance.value);
-        const clearFirst = ui.clearFirst.checked;
-        const clearGreyOnly = ui.clearGreyOnly.checked;
-        const { r: Rb, g: Gb, b: Bb } = hexToRgb(ui.clearColor.value);
-
-        opValSpan.innerText = opacity;
-        tolValSpan.innerText = tolerance;
-
-        mainCanvas.width = originalImage.width;
-        mainCanvas.height = originalImage.height;
-        ctx.drawImage(originalImage, 0, 0);
-
-        const imgData = ctx.getImageData(0, 0, mainCanvas.width, mainCanvas.height);
-        const data = imgData.data;
-
-        for (let i = 0; i < data.length; i += 4) {
-            let r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-            const srcR = r, srcG = g, srcB = b, srcA = a;
-            let resR, resG, resB, resA;
-
-            if (mode === 3) {
-                // Double Layer mode (On Black)
-                const v = 112;
-                let [tr, tg, tb, ta] = clearPixel(r, g, b, a, 255, 255, 255);
-                tr = Math.max(0, Math.min(255, tr + v - Math.floor(2 * tr * v / 255)));
-                tg = Math.max(0, Math.min(255, tg + v - Math.floor(2 * tg * v / 255)));
-                tb = Math.max(0, Math.min(255, tb + v - Math.floor(2 * tb * v / 255)));
-                [tr, tg, tb, ta] = clearPixel(tr, tg, tb, ta, 255, 255, 255);
-                tr = (tr + 255) >> 1; tg = (tg + 255) >> 1; tb = (tb + 255) >> 1;
-                ta = Math.floor((ta * 138) / 255);
-
-                let [br, bg, bb, ba] = clearPixel(r, g, b, a, 0, 0, 0);
-                br = Math.max(0, Math.min(255, br + v - Math.floor(2 * br * v / 255)));
-                bg = Math.max(0, Math.min(255, bg + v - Math.floor(2 * bg * v / 255)));
-                bb = Math.max(0, Math.min(255, bb + v - Math.floor(2 * bb * v / 255)));
-                [br, bg, bb, ba] = clearPixel(br, bg, bb, ba, 0, 0, 0);
-                br = Math.floor(br * 127 / 255); bg = Math.floor(bg * 127 / 255); bb = Math.floor(bb * 127 / 255);
-
-                const alpha = ta / 255;
-                const invAlpha = 1 - alpha;
-                resR = tr * alpha + br * invAlpha;
-                resG = tg * alpha + bg * invAlpha;
-                resB = tb * alpha + bb * invAlpha;
-                resA = Math.max(ta, ba);
-            } else {
-                let wr = r, wg = g, wb = b, wa = a;
-
-                if (mode === 2) {
-                    [wr, wg, wb, wa] = clearPixel(wr, wg, wb, wa, Rb, Gb, Bb);
-                    wr = Math.max(0, Math.min(255, wr + 112 - Math.floor(2 * wr * 112 / 255)));
-                    wg = Math.max(0, Math.min(255, wg + 112 - Math.floor(2 * wg * 112 / 255)));
-                    wb = Math.max(0, Math.min(255, wb + 112 - Math.floor(2 * wb * 112 / 255)));
-                }
-
-                if (clearFirst && mode !== 2) {
-                    let sc = true;
-                    if (clearGreyOnly && (Math.max(wr, wg, wb) - Math.min(wr, wg, wb)) > tolerance) sc = false;
-                    if (sc) [wr, wg, wb, wa] = clearPixel(wr, wg, wb, wa, Rb, Gb, Bb);
-                }
-
-                resR = wr; resG = wg; resB = wb; resA = wa;
-
-                if (mode === 0) {
-                    // Invisible on Grey
-                    resR = Math.max(0, Math.min(255, wr + 127 - Math.floor(2 * wr * 127 / 255)));
-                    resG = Math.max(0, Math.min(255, wg + 127 - Math.floor(2 * wg * 127 / 255)));
-                    resB = Math.max(0, Math.min(255, wb + 127 - Math.floor(2 * wb * 127 / 255)));
-                } else if (mode === 1 || mode === 2) {
-                    if ((Math.max(wr, wg, wb) - Math.min(wr, wg, wb)) <= tolerance) {
-                        resR = Math.max(0, Math.min(255, wr + 127 - Math.floor(2 * wr * 127 / 255)));
-                        resG = Math.max(0, Math.min(255, wg + 127 - Math.floor(2 * wg * 127 / 255)));
-                        resB = Math.max(0, Math.min(255, wb + 127 - Math.floor(2 * wb * 127 / 255)));
-                    } else if (mode === 1) {
-                        // Colored Grey Hybrid
-                        resR = Math.floor(wr * 127 / 255);
-                        resG = Math.floor(wg * 127 / 255);
-                        resB = Math.floor(wb * 127 / 255);
-                    }
-                }
-            }
-
-            // Apply global opacity
-            const f = opacity / 255;
-            data[i]   = Math.floor(srcR * (1 - f) + resR * f);
-            data[i+1] = Math.floor(srcG * (1 - f) + resG * f);
-            data[i+2] = Math.floor(srcB * (1 - f) + resB * f);
-            data[i+3] = Math.floor(srcA * (1 - f) + resA * f);
-        }
-
-        lastProcessedData = new Uint8Array(data);
-        ctx.putImageData(imgData, 0, 0);
-
-        downloadBtn.disabled = false;
-
-        // Update lossless Base64 (important for Roblox bypass)
-        const bytes = PNGEncoder.encode(originalImage.width, originalImage.height, lastProcessedData);
-        base64Output.value = "data:image/png;base64," + PNGEncoder.toBase64(bytes);
-    }
-
     function showStatus(msg, color) {
-        statusMsg.innerText = msg; 
+        statusMsg.innerText = msg;
         statusMsg.style.color = color;
         setTimeout(() => { if(statusMsg.innerText === msg) statusMsg.innerText = ''; }, 3000);
     }
 
     function loadImage(url) {
         const img = new Image();
-        img.onload = () => { 
-            originalImage = img; 
-            process(); 
+        img.onload = () => {
+            originalImage = img;
+            process();
         };
         img.src = url;
     }
@@ -449,7 +486,7 @@
 
     downloadBtn.addEventListener('click', () => {
         if (!lastProcessedData) return;
-        const bytes = PNGEncoder.encode(originalImage.width, originalImage.height, lastProcessedData);
+        const bytes = PNGEncoder.encode(mainCanvas.width, mainCanvas.height, lastProcessedData);
         const link = document.createElement('a');
         link.download = 'bypassed.png';
         link.href = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
@@ -460,7 +497,7 @@
     copyBase64Btn.addEventListener('click', () => {
         base64Output.select();
         document.execCommand('copy');
-        showStatus('Base64 Copied! (Use this to avoid re-encoding bans)', '#10b981');
+        showStatus('Base64 Copied! (Recommended)', '#10b981');
     });
 </script>
 </body>
